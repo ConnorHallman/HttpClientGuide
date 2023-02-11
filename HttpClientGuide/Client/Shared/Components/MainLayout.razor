@@ -1,0 +1,43 @@
+﻿@inherits LayoutComponentBase
+
+<style>
+    .mud-drawer-header {
+        background-color: var(--mud-palette-appbar-background);
+    }
+</style>
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudLayout>
+    <MudAppBar Elevation="2">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        <MudSpacer />
+    </MudAppBar>
+    <MudDrawer @bind-Open="@_navMenuOpened" Elevation="2">
+        <MudDrawerHeader>
+            <div class="d-flex" style="align-items: center; gap: 10px;">
+                <a href="/"><h2 style="color: white;">HttpClientGuide</h2></a>
+                <img style="height: 40px; width: 40px;" src="images/blazor.png" />
+            </div>
+        </MudDrawerHeader>
+        <NavMenu />
+    </MudDrawer>
+    <MudMainContent Style="min-height: 100vh; display: flex; flex-direction: column">
+        <MudContainer MaxWidth="MaxWidth.False" Style="flex: 1">
+            <MudPaper Class="py-4" Elevation="0">
+                @Body
+            </MudPaper>
+        </MudContainer>
+    </MudMainContent>
+    <MudScrollToTop TopOffset="400" Style="z-index:2000;">
+        <MudFab Icon="@Icons.Material.Filled.KeyboardArrowUp" Color="Color.Primary" />
+    </MudScrollToTop>
+</MudLayout>
+@code {
+    bool _navMenuOpened = true;
+
+    private void DrawerToggle()
+    {
+        _navMenuOpened = !_navMenuOpened;
+    }
+}

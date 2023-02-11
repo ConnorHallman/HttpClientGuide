@@ -1,0 +1,124 @@
+﻿@page "/users"
+@inject ISnackbar snackbar
+@inject IUserService userService
+<MudTable Items="_users" Outlined="true" Striped="true" Bordered="true">
+    <ToolBarContent>
+        <h1 >Users</h1>
+        <MudSpacer/>
+        <MudButton Style="padding-right: 1em;" Color="Color.Primary" EndIcon="@Icons.Material.Filled.Person" OnClick="@(() => ToggleCreateUserDialog(true))">Create User</MudButton>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Username</MudTh>
+        <MudTh>First Name</MudTh>
+        <MudTh>Last Name</MudTh>
+        <MudTh>Email</MudTh>
+        <MudTh>Age</MudTh>
+        <MudTh>Options</MudTh>
+    </HeaderContent>
+    <RowTemplate Context="user">
+        <MudTd>@user.Username</MudTd>
+        <MudTd>@user.FirstName</MudTd>
+        <MudTd>@user.LastName</MudTd>
+        <MudTd>@user.Email</MudTd>
+        <MudTd>@user.Age</MudTd>
+        <MudTh>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => BeginUpdateUser(user))"/>
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(async () => await DeleteUserAsync(user))"/>
+        </MudTh>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager></MudTablePager>
+    </PagerContent>
+</MudTable>
+
+<MudDialog @bind-IsVisible="_showCreateDialog" Style="width: 50vw">
+    <TitleContent>
+        Create User
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_createUserForm">
+            <MudTextField @bind-Text="_userBeingCreated.Username" T="string" Immediate="true" Required="true" Label="Username" />
+            <MudTextField @bind-Text="_userBeingCreated.FirstName" T="string" Immediate="true" Required="true" Label="First Name" />
+            <MudTextField @bind-Text="_userBeingCreated.LastName" T="string" Immediate="true" Required="true" Label="Last Name" />
+            <MudTextField @bind-Text="_userBeingCreated.Email" T="string" Immediate="true" Required="true" Label="Email" />
+            <MudNumericField T="int" Immediate="true" Required="true" @bind-Value="@_userBeingCreated.Age" Label="Age" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Error" OnClick="@(() => ToggleCreateUserDialog(false))">Cancel</MudButton>
+        <MudButton OnClick="CreateUserAsync">Create User</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-IsVisible="_showUpdateDialog" Style="width: 50vw">
+    <TitleContent>
+        Edit User
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_updateUserForm">
+            <MudTextField @bind-Text="_userBeingEdited.Username" T="string" Immediate="true" Required="true" Label="Username" />
+            <MudTextField @bind-Text="_userBeingEdited.FirstName" T="string" Immediate="true" Required="true" Label="First Name" />
+            <MudTextField @bind-Text="_userBeingEdited.LastName" T="string" Immediate="true" Required="true" Label="Last Name" />
+            <MudTextField @bind-Text="_userBeingEdited.Email" T="string" Immediate="true" Required="true" Label="Email" />
+            <MudNumericField T="int" Immediate="true" Required="true" @bind-Value="@_userBeingEdited.Age" Label="Age" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Error" OnClick="@(() => _showUpdateDialog = false)">Cancel</MudButton>
+        <MudButton OnClick="UpdateUserAsync">Update User</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    private List<User> _users;
+    private MudForm? _createUserForm;
+    private MudForm? _updateUserForm;
+    private User _userBeingCreated;
+    private User _userBeingEdited;
+    private bool _showCreateDialog;
+    private bool _showUpdateDialog;
+    protected override async Task OnInitializedAsync()
+    {
+        _users = await userService.GetAllAsync();
+        _userBeingCreated = new User() {Id = Guid.NewGuid().ToString()};
+    }
+    private async Task DeleteUserAsync(User user)
+    {
+        await userService.DeleteAsync(user.Id);
+        _users.Remove(user);
+        snackbar.Add("Deleted user " + user.Username);
+    }
+    private async Task CreateUserAsync()
+    {
+        await _createUserForm.Validate();
+        if (_createUserForm.IsValid)
+        {
+            await userService.CreateAsync(_userBeingCreated);
+            _users.Add(_userBeingCreated);
+            snackbar.Add("Created user " + _userBeingCreated.Username);
+            _userBeingCreated = new User() {Id = Guid.NewGuid().ToString()};
+            ToggleCreateUserDialog(false);
+        }
+    }
+    private async Task UpdateUserAsync()
+    {
+        _updateUserForm.Validate();
+        if (_updateUserForm.IsValid)
+        {
+            await userService.UpdateAsync(_userBeingEdited);
+            var index = _users.FindIndex(x => x.Id == _userBeingEdited.Id);
+            _users[index] = _userBeingEdited;
+            snackbar.Add("Updated user " + _userBeingEdited.Username);
+            _showUpdateDialog = false;
+        }
+    }
+    private void ToggleCreateUserDialog(bool state)
+    {
+        _showCreateDialog = state;
+        _userBeingCreated = new User() { Id = Guid.NewGuid().ToString() };
+    }
+    private void BeginUpdateUser(User user)
+    {
+        _showUpdateDialog = true;
+        _userBeingEdited = user.Clone();
+    }
+}
