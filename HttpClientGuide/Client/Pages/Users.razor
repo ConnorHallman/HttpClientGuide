@@ -1,7 +1,7 @@
 ﻿@page "/users"
 @inject ISnackbar snackbar
 @inject IUserService userService
-<MudTable Items="_users" Outlined="true" Striped="true" Bordered="true">
+<MudTable Items="_users" Outlined="true" Striped="true" Bordered="true" Dense="true">
     <ToolBarContent>
         <h1 >Users</h1>
         <MudSpacer/>
@@ -33,7 +33,7 @@
 
 <MudDialog @bind-IsVisible="_showCreateDialog" Style="width: 50vw">
     <TitleContent>
-        Create User
+        <h3>Create User</h3>
     </TitleContent>
     <DialogContent>
         <MudForm @ref="_createUserForm">
@@ -52,7 +52,7 @@
 
 <MudDialog @bind-IsVisible="_showUpdateDialog" Style="width: 50vw">
     <TitleContent>
-        Edit User
+        <h3>Edit User</h3>
     </TitleContent>
     <DialogContent>
         <MudForm @ref="_updateUserForm">
@@ -65,7 +65,7 @@
     </DialogContent>
     <DialogActions>
         <MudButton Color="Color.Error" OnClick="@(() => _showUpdateDialog = false)">Cancel</MudButton>
-        <MudButton OnClick="UpdateUserAsync">Update User</MudButton>
+        <MudButton OnClick="UpdateUserAsync" >Update User</MudButton>
     </DialogActions>
 </MudDialog>
 @code {
@@ -76,17 +76,19 @@
     private User _userBeingEdited;
     private bool _showCreateDialog;
     private bool _showUpdateDialog;
+
     protected override async Task OnInitializedAsync()
     {
         _users = await userService.GetAllAsync();
-        _userBeingCreated = new User() {Id = Guid.NewGuid().ToString()};
     }
+
     private async Task DeleteUserAsync(User user)
     {
         await userService.DeleteAsync(user.Id);
         _users.Remove(user);
         snackbar.Add("Deleted user " + user.Username);
     }
+
     private async Task CreateUserAsync()
     {
         await _createUserForm.Validate();
@@ -95,10 +97,10 @@
             await userService.CreateAsync(_userBeingCreated);
             _users.Add(_userBeingCreated);
             snackbar.Add("Created user " + _userBeingCreated.Username);
-            _userBeingCreated = new User() {Id = Guid.NewGuid().ToString()};
             ToggleCreateUserDialog(false);
         }
     }
+
     private async Task UpdateUserAsync()
     {
         _updateUserForm.Validate();
@@ -111,14 +113,17 @@
             _showUpdateDialog = false;
         }
     }
+
     private void ToggleCreateUserDialog(bool state)
     {
-        _showCreateDialog = state;
         _userBeingCreated = new User() { Id = Guid.NewGuid().ToString() };
+        _showCreateDialog = state;
     }
+
     private void BeginUpdateUser(User user)
     {
         _showUpdateDialog = true;
         _userBeingEdited = user.Clone();
     }
 }
+

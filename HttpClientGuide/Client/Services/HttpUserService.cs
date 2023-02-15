@@ -9,6 +9,7 @@ namespace HttpClientGuide.Client.Services
     public class HttpUserService : IUserService
     {
         private readonly HttpClient _httpClient;
+
         private readonly JsonSerializerOptions _serializerOptions = new()
         {
             PropertyNameCaseInsensitive = true
@@ -28,9 +29,10 @@ namespace HttpClientGuide.Client.Services
             var apiResponse = JsonSerializer.Deserialize<ApiResponse>(await response.Content.ReadAsStreamAsync(), _serializerOptions);
             if (apiResponse is not {Succes: true})
             {
-                throw new HttpRequestException(apiResponse?.ResponseMessage);
+                throw new HttpRequestException(apiResponse?.ResponseMessage ?? "Create: ApiResponse could not be deserialized");
             }
         }
+
         public async Task<List<User>> GetAllAsync()
         {
             var response = await _httpClient.GetAsync("getall");
@@ -40,10 +42,7 @@ namespace HttpClientGuide.Client.Services
             {
                 return apiResponse.Data;
             }
-            else
-            {
-                throw new HttpRequestException(apiResponse?.ResponseMessage);
-            }
+            throw new HttpRequestException(apiResponse?.ResponseMessage ?? "GetAll: ApiResponse could not be deserialized");
         }
 
         public async Task UpdateAsync(User user)
@@ -53,7 +52,7 @@ namespace HttpClientGuide.Client.Services
             var apiResponse = JsonSerializer.Deserialize<ApiResponse>(await response.Content.ReadAsStreamAsync(), _serializerOptions);
             if (apiResponse is not {Succes: true})
             {
-                throw new HttpRequestException(apiResponse?.ResponseMessage);
+                throw new HttpRequestException(apiResponse?.ResponseMessage ?? "Update: ApiResponse could not be deserialized");
             }
         }
 
@@ -64,7 +63,7 @@ namespace HttpClientGuide.Client.Services
             var apiResponse = JsonSerializer.Deserialize<ApiResponse>(await response.Content.ReadAsStreamAsync(), _serializerOptions);
             if (apiResponse is not {Succes: true})
             {
-                throw new HttpRequestException(apiResponse?.ResponseMessage);
+                throw new HttpRequestException(apiResponse?.ResponseMessage ?? "ApiResponse could not be deserialized");
             }
         }
     }
